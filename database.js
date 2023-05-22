@@ -29,7 +29,6 @@ database
   database
   .query("SELECT * FROM users")
   .then((result) => {
-    console.log(result[0])
     const users = result[0];
   })
   .catch((err) => {
