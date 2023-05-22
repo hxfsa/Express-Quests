@@ -34,10 +34,29 @@ const postUser = (req, res) => {
   database
     .query(SQL, [firstname, lastname, email, city, language])
     .then(([result]) => {
-        res.location(`/api/users/${result.insertId}`).sendStatus(201);
-      })
+      res.location(`/api/users/${result.insertId}`).sendStatus(201);
+    })
     .catch((err) => {
       console.error("error");
+    });
+};
+
+const updateUser = (req, res) => {
+  const id = parseInt(req.params.id);
+  const { firstname, lastname, email, city, language } = req.body;
+  const SQL =
+    "UPDATE USERS set firstname = ?, lastname = ?, email = ?, city = ?, language = ? WHERE id = ?";
+  database
+    .query(SQL, [firstname, lastname, email, city, language, id])
+    .then(([result]) => {
+      if (result.affectedRows === 0) {
+        res.status(404).send("error updating the user");
+      } else {
+        res.sendStatus(204);
+      }
+    })
+    .catch((err) => {
+      res.status(500).send("Error updating the user");
     });
 };
 
@@ -45,4 +64,5 @@ module.exports = {
   getUsers,
   getUserById,
   postUser,
+  updateUser,
 };
