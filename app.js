@@ -37,3 +37,7 @@ app.get("/api/users/:id", userHandlers.getUserById);
 app.post("/api/users", userHandlers.postUser);
 app.put("/api/users/:id", userHandlers.updateUser);
 
+const { hashPassword } = require("./auth.js");
+
+app.post("/api/users", hashPassword, userHandlers.postUser);
+app.put("/api/users/:id", hashPassword, userHandlers.updateUser);

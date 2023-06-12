@@ -43,11 +43,11 @@ const getUserById = (req, res) => {
     });
 };
 const postUser = (req, res) => {
-  const { firstname, lastname, email, city, language } = req.body;
+  const { firstname, lastname, email, city, language, username, hashedPassword } = req.body;
   const SQL =
-    "INSERT INTO users(firstname, lastname, email, city, language) VALUES (?, ?, ?, ?, ?)";
+    "INSERT INTO users(firstname, lastname, email, city, language, username, hashedPassword) VALUES (?, ?, ?, ?, ?, ?, ?)";
   database
-    .query(SQL, [firstname, lastname, email, city, language])
+    .query(SQL, [firstname, lastname, email, city, language, username, hashedPassword])
     .then(([result]) => {
       res.location(`/api/users/${result.insertId}`).sendStatus(201);
     })
@@ -58,11 +58,11 @@ const postUser = (req, res) => {
 
 const updateUser = (req, res) => {
   const id = parseInt(req.params.id);
-  const { firstname, lastname, email, city, language } = req.body;
+  const { firstname, lastname, email, city, language, username, hashedPassword } = req.body;
   const SQL =
-    "UPDATE USERS set firstname = ?, lastname = ?, email = ?, city = ?, language = ? WHERE id = ?";
+    "UPDATE USERS set firstname = ?, lastname = ?, email = ?, city = ?, language = ?, username = ?, hashedPassword = ? WHERE id = ?";
   database
-    .query(SQL, [firstname, lastname, email, city, language, id])
+    .query(SQL, [firstname, lastname, email, city, language, id, username, hashedPassword])
     .then(([result]) => {
       if (result.affectedRows === 0) {
         res.status(404).send("error updating the user");
