@@ -1,17 +1,17 @@
 const database = require("./database");
 const getUsers = (req, res) => {
-  let SQL = "SELECT * FROM users";
+  let SQL = "SELECT id, firstname, lastname, email, city, language FROM users";
   const sqlValues = [];
   const language = req.query.language;
   const city = req.query.city;
 
   if (language !== null) {
-    SQL = "SELECT * FROM users WHERE language = ?";
+    SQL = "SELECT id, firstname, lastname, email, city, language FROM users WHERE language = ?";
     sqlValues.push(language);
   }
 
   if (city !== null) {
-    SQL = "SELECT * FROM users WHERE city = ?";
+    SQL = "SELECT id, firstname, lastname, email, city, language FROM users WHERE city = ?";
     sqlValues.push(city);
   }
 
@@ -29,7 +29,7 @@ const getUsers = (req, res) => {
 const getUserById = (req, res) => {
   const id = parseInt(req.params.id);
   database
-    .query("select * from users where id = ?", [id])
+    .query("select id, firstname, lastname, email, city, language from users where id = ?", [id])
     .then(([users]) => {
       if (users[0] != null) {
         res.status(200).json(users[0]);
