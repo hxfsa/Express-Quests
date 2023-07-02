@@ -1,77 +1,138 @@
+userhadnler
+
 const database = require("./database");
+
 const getUsers = (req, res) => {
-  let SQL = "SELECT * FROM users";
-  const sqlValues = [];
-  const language = req.query.language;
-  const city = req.query.city;
+  const initialSql = "select * from users";
+  const where = [];
 
-  if (language !== null) {
-    SQL = "SELECT * FROM users WHERE language = ?";
-    sqlValues.push(language);
+  if (req.query.city != null) {
+    where.push({
+      column: "city",
+      value: req.query.city,
+      operator: "=",
+    });
   }
-
-  if (city !== null) {
-    SQL = "SELECT * FROM users WHERE city = ?";
-    sqlValues.push(city);
+  if (req.query.language != null) {
+    where.push({
+      column: "language",
+      value: req.query.language,
+      operator: "=",
+    });
   }
 
   database
-    .query(SQL, sqlValues)
-    .then((result) => {
-      res.json(result[0]);
+    .query(
+      where.reduce(
+        (sql, { column, operator }, index) =>
+          `${sql} ${index === 0 ? "where" : "and"} ${column} ${operator} ?`,
+        initialSql
+      ),
+      where.map(({ value }) => value)
+    )
+    .then(([users]) => {
+      res.json(users);
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).send("ERROR");
+      res.status(500).send("Error retrieving data from database");
     });
 };
 
 const getUserById = (req, res) => {
   const id = parseInt(req.params.id);
+
   database
     .query("select * from users where id = ?", [id])
     .then(([users]) => {
       if (users[0] != null) {
-        res.status(200).json(users[0]);
+        res.json(users[0]);
       } else {
         res.status(404).send("Not Found");
       }
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).send("error");
+      res.status(500).send("Error retrieving data from database");
     });
 };
+
 const postUser = (req, res) => {
-  const { firstname, lastname, email, city, language, username, hashedPassword } = req.body;
-  const SQL =
-    "INSERT INTO users(firstname, lastname, email, city, language, username, hashedPassword) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  const { firstname, lastname, email, city, language, hashedPassword } =
+    req.body;
+
   database
-    .query(SQL, [firstname, lastname, email, city, language, username, hashedPassword])
+    .query(
+      "INSERT INTO users(firstname, lastname, email, city, language, hashedPassword) VALUES (?, ?, ?, ?, ?, ?)",
+      [firstname, lastname, email, city, language, hashedPassword]
+    )
     .then(([result]) => {
       res.location(`/api/users/${result.insertId}`).sendStatus(201);
     })
     .catch((err) => {
-      console.error("error");
+      console.error(err);
+      res.status(500).send("Error saving the user");
     });
 };
 
 const updateUser = (req, res) => {
   const id = parseInt(req.params.id);
-  const { firstname, lastname, email, city, language, username, hashedPassword } = req.body;
-  const SQL =
-    "UPDATE USERS set firstname = ?, lastname = ?, email = ?, city = ?, language = ?, username = ?, hashedPassword = ? WHERE id = ?";
+  const { firstname, lastname, email, city, language } = req.body;
+
   database
-    .query(SQL, [firstname, lastname, email, city, language, id, username, hashedPassword])
+    .query(
+      "update users set firstname = ?, lastname = ?, email = ?, city = ?, language = ? where id = ?",
+      [firstname, lastname, email, city, language, id]
+    )
     .then(([result]) => {
       if (result.affectedRows === 0) {
-        res.status(404).send("error updating the user");
+        res.status(404).send("Not Found");
       } else {
         res.sendStatus(204);
       }
     })
     .catch((err) => {
-      res.status(500).send("Error updating the user");
+      console.error(err);
+      res.status(500).send("Error editing the user");
+    });
+};
+
+const deleteUser = (req, res) => {
+  const id = parseInt(req.params.id);
+
+  database
+    .query("delete from users where id = ?", [id])
+    .then(([result]) => {
+      if (result.affectedRows === 0) {
+        res.status(404).send("Not Found");
+      } else {
+        res.sendStatus(204);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error deleting the user");
+    });
+};
+
+const getUserByEmailWithPasswordAndPassToNext = (req, res) => {
+  const email = req.body.email;
+
+  database
+    .query(
+      "select * from users where email = ?", [email]
+    )
+    .then(([users]) => {
+      if (users[0] != null) {
+        res.user = users[0];
+        next();
+      } else {
+        res.status(401);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
     });
 };
 
@@ -80,4 +141,6 @@ module.exports = {
   getUserById,
   postUser,
   updateUser,
+  deleteUser,
+  getUserByEmailWithPasswordAndPassToNext,
 };
