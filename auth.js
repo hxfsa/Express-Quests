@@ -1,5 +1,3 @@
-auth
-
 const argon2 = require("argon2");
 var jwt = require("jsonwebtoken");
 
